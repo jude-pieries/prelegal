@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Download } from 'lucide-react'
-import { MndaForm } from '@/components/mnda-form'
+import { ChatInterface } from '@/components/chat-interface'
 import { MndaPreview } from '@/components/mnda-preview'
 import { Button } from '@/components/ui/button'
 import { defaultMndaFormData, type MndaFormData } from '@/lib/types'
@@ -16,14 +16,16 @@ export default function Home() {
 
   const markdown = renderDocument(formData)
 
+  const handleFieldUpdates = (updates: Partial<MndaFormData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }))
+  }
+
   const handleDownloadPdf = () => {
     const original = document.title
     const company = formData.party1Company || formData.party2Company
     document.title = company ? `Mutual-NDA-${company}` : 'Mutual-NDA'
+    window.addEventListener('afterprint', () => { document.title = original }, { once: true })
     window.print()
-    setTimeout(() => {
-      document.title = original
-    }, 500)
   }
 
   return (
@@ -41,8 +43,8 @@ export default function Home() {
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        <aside className="w-[420px] shrink-0 overflow-y-auto border-r bg-white p-6 no-print">
-          <MndaForm data={formData} onChange={setFormData} />
+        <aside className="w-[420px] shrink-0 border-r bg-white p-6 no-print flex flex-col overflow-hidden">
+          <ChatInterface onFieldUpdates={handleFieldUpdates} />
         </aside>
 
         <main className="flex-1 overflow-y-auto bg-slate-50 p-8 print-area">

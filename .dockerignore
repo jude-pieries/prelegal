@@ -1,0 +1,24 @@
+.git
+.gitignore
+.env
+.env.*
+.claude/
+
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# Python
+backend/.venv/
+backend/__pycache__/
+**/__pycache__/
+**/*.pyc
+
+# Scripts
+scripts/
+
+# Misc
+*.log
+README.md
+LICENSE
