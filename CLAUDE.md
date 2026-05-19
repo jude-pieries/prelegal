@@ -8,7 +8,7 @@ The available documents are covered in the catalog.json file in the project root
 
 @catalog.json
 
-The current implementation supports all 11 document types via AI chat with full user authentication and document persistence.
+The current implementation has the V1 technical foundation in place (FastAPI backend, SQLite, Docker, auth API) and a Mutual NDA form prototype in the frontend. AI chat, document persistence, and auth UI are not yet built.
 
 ## Development process
 
@@ -30,7 +30,7 @@ The entire project should be packaged into a Docker container.
 The backend should be in backend/ and be a uv project, using FastAPI.
 The frontend should be in frontend/
 The database should use SQLLite and be created from scratch each time the Docker container is brought up, allowing for a users table with sign up and sign in.
-Consider statically building the frontend and serving it via FastAPI, if that will work.
+The frontend is statically built (`next.config.ts` uses `output: 'export'`) and served by FastAPI from `backend/static/`.
 There should be scripts in scripts/ for:
 ```bash
 # Mac
@@ -46,6 +46,21 @@ scripts/start-windows.ps1
 scripts/stop-windows.ps1
 ```
 Backend available at http://localhost:8000
+
+## Implementation status
+
+| Area | Status | Notes |
+|------|--------|-------|
+| Templates | Done | 12 templates in `templates/`, catalogued in `catalog.json` |
+| Frontend prototype | Done | Mutual NDA form in `frontend/` (Next.js, static export) |
+| Backend foundation | Done | FastAPI + uv in `backend/`, served at port 8000 |
+| Database | Done | SQLite, recreated fresh on each container startup |
+| Auth API | Done | `POST /api/auth/signup` and `/signin` return JWT tokens |
+| Docker + scripts | Done | `Dockerfile`, `docker-compose.yml`, and `scripts/` for Mac/Linux/Windows |
+| Auth UI | Not started | Sign up / sign in screens not yet built |
+| AI chat | Not started | LLM integration for document drafting not yet built |
+| Document persistence | Not started | Saving/loading user documents not yet built |
+| Full document support | Not started | Only Mutual NDA is wired up; the other 11 templates are not yet in the UI |
 
 ## Color Scheme
 - Accent Yellow: `#ecad0a`
