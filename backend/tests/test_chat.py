@@ -23,12 +23,13 @@ def _mock_completion_response(message: str, field_updates: dict = None, is_compl
     return mock_response
 
 
-def _post_chat(messages=None, current_fields=None):
+def _post_chat(messages=None, current_fields=None, document_type: str = "mutual-non-disclosure-agreement"):
     return client.post(
         "/api/chat/message",
         json={
             "messages": messages or [{"role": "user", "content": "Hello"}],
             "current_fields": current_fields or {},
+            "document_type": document_type,
         },
     )
 
@@ -130,3 +131,40 @@ class TestChatMessageErrors:
             mock_llm.return_value = _mock_completion_response("Hello! What's the purpose?")
             res = _post_chat(messages=[])
             assert res.status_code == 200
+
+
+class TestMultiDocumentType:
+    def test_unknown_document_type_returns_404(self):
+        res = _post_chat(document_type="shareholder-agreement")
+        assert res.status_code == 404
+        assert "not supported" in res.json()["detail"]
+
+    @patch("routers.chat.acompletion", new_callable=AsyncMock)
+    def test_cloud_service_agreement_returns_200(self, mock_llm):
+        mock_llm.return_value = _mock_completion_response(
+            "Let's start your Cloud Service Agreement. What is the full legal name of the customer?",
+            field_updates={},
+            is_complete=False,
+        )
+        res = _post_chat(
+            messages=[{"role": "user", "content": "Hello"}],
+            document_type="cloud-service-agreement",
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert "message" in data
+
+    @patch("routers.chat.acompletion", new_callable=AsyncMock)
+    def test_design_partner_agreement_returns_200(self, mock_llm):
+        mock_llm.return_value = _mock_completion_response(
+            "Let's start your Design Partner Agreement. What is the full legal name of the provider?",
+            field_updates={},
+            is_complete=False,
+        )
+        res = _post_chat(
+            messages=[{"role": "user", "content": "Hello"}],
+            document_type="design-partner-agreement",
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert "message" in data

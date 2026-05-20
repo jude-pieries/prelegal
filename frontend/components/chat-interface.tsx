@@ -4,7 +4,6 @@ import { useRef, useEffect, useState } from 'react'
 import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import type { MndaFormData } from '@/lib/types'
 
 interface Message {
   role: 'assistant' | 'user'
@@ -12,17 +11,26 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
-  onFieldUpdates: (updates: Partial<MndaFormData>) => void
+  documentType: string
+  documentName: string
+  onFieldUpdates: (updates: Record<string, string | number | boolean>) => void
 }
 
-const GREETING =
+const MNDA_GREETING =
   "Hi! I'm here to help you draft your Mutual NDA. Let's start — what's the purpose of this agreement? For example, are you evaluating a potential business partnership, exploring an acquisition, or something else?"
 
-export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
+function getGreeting(documentType: string, documentName: string): string {
+  if (documentType === 'mutual-non-disclosure-agreement') {
+    return MNDA_GREETING
+  }
+  return `Hi! I'm here to help you draft your ${documentName}. Let's get started — what are the names of the two parties involved?`
+}
+
+export function ChatInterface({ documentType, documentName, onFieldUpdates }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: GREETING },
+    { role: 'assistant', content: getGreeting(documentType, documentName) },
   ])
-  const [confirmedFields, setConfirmedFields] = useState<Partial<MndaFormData>>({})
+  const [confirmedFields, setConfirmedFields] = useState<Record<string, string | number | boolean>>({})
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -47,6 +55,7 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
         body: JSON.stringify({
           messages: updatedMessages,
           current_fields: confirmedFields,
+          document_type: documentType,
         }),
       })
 
@@ -58,7 +67,7 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
 
       const updates = Object.fromEntries(
         Object.entries(data.field_updates).filter(([, v]) => v !== null && v !== undefined)
-      ) as Partial<MndaFormData>
+      ) as Record<string, string | number | boolean>
 
       if (Object.keys(updates).length > 0) {
         setConfirmedFields((prev) => ({ ...prev, ...updates }))
@@ -88,7 +97,7 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
           AI Assistant
         </p>
         <p className="text-sm font-medium mt-0.5" style={{ color: '#032147' }}>
-          Mutual NDA Creator
+          {documentName}
         </p>
       </div>
 

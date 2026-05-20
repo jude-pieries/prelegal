@@ -1,56 +1,57 @@
 'use client'
 
-import { useState } from 'react'
-import { Download } from 'lucide-react'
-import { ChatInterface } from '@/components/chat-interface'
-import { MndaPreview } from '@/components/mnda-preview'
-import { Button } from '@/components/ui/button'
-import { defaultMndaFormData, type MndaFormData } from '@/lib/types'
-import { renderDocument } from '@/lib/mnda-template'
+import Link from 'next/link'
+import { CATALOG } from '@/lib/catalog'
 
 export default function Home() {
-  const [formData, setFormData] = useState<MndaFormData>(() => ({
-    ...defaultMndaFormData,
-    effectiveDate: new Date().toISOString().split('T')[0],
-  }))
-
-  const markdown = renderDocument(formData)
-
-  const handleFieldUpdates = (updates: Partial<MndaFormData>) => {
-    setFormData((prev) => ({ ...prev, ...updates }))
-  }
-
-  const handleDownloadPdf = () => {
-    const original = document.title
-    const company = formData.party1Company || formData.party2Company
-    document.title = company ? `Mutual-NDA-${company}` : 'Mutual-NDA'
-    window.addEventListener('afterprint', () => { document.title = original }, { once: true })
-    window.print()
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <header className="h-14 shrink-0 border-b bg-white flex items-center justify-between px-6 no-print">
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-semibold tracking-widest uppercase text-muted-foreground">PreLegal</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-sm font-medium">Mutual NDA Creator</span>
-        </div>
-        <Button onClick={handleDownloadPdf} size="sm" className="gap-2">
-          <Download className="h-4 w-4" />
-          Download PDF
-        </Button>
+    <div className="min-h-screen bg-slate-50">
+      <header className="h-14 bg-white border-b flex items-center px-6">
+        <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: '#888888' }}>
+          PreLegal
+        </span>
+        <span className="mx-2 text-muted-foreground">/</span>
+        <span className="text-sm font-medium" style={{ color: '#032147' }}>
+          Document Library
+        </span>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-[420px] shrink-0 border-r bg-white p-6 no-print flex flex-col overflow-hidden">
-          <ChatInterface onFieldUpdates={handleFieldUpdates} />
-        </aside>
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        <div className="mb-10">
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#032147' }}>
+            Draft a Legal Agreement
+          </h1>
+          <p className="text-base" style={{ color: '#888888' }}>
+            Choose a document type to get started. Our AI assistant will guide you through the required fields.
+          </p>
+        </div>
 
-        <main className="flex-1 overflow-y-auto bg-slate-50 p-8 print-area">
-          <MndaPreview markdown={markdown} />
-        </main>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {CATALOG.map((entry) => (
+            <Link
+              key={entry.slug}
+              href={`/${entry.slug}/`}
+              className="block bg-white rounded-xl border border-slate-200 p-5 hover:border-blue-400 hover:shadow-md transition-all group"
+            >
+              <div
+                className="text-xs font-semibold uppercase tracking-widest mb-1"
+                style={{ color: '#209dd7' }}
+              >
+                Legal Agreement
+              </div>
+              <h2
+                className="text-sm font-semibold mb-2 group-hover:underline"
+                style={{ color: '#032147' }}
+              >
+                {entry.name}
+              </h2>
+              <p className="text-xs leading-relaxed line-clamp-3" style={{ color: '#888888' }}>
+                {entry.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </main>
     </div>
   )
 }
