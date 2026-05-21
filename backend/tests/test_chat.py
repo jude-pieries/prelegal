@@ -23,13 +23,20 @@ def _mock_completion_response(message: str, field_updates: dict = None, is_compl
     return mock_response
 
 
+<<<<<<< feature/kan-5-all-document-types
 def _post_chat(messages=None, current_fields=None, document_type: str = "mutual-non-disclosure-agreement"):
+=======
+def _post_chat(messages=None, current_fields=None):
+>>>>>>> main
     return client.post(
         "/api/chat/message",
         json={
             "messages": messages or [{"role": "user", "content": "Hello"}],
             "current_fields": current_fields or {},
+<<<<<<< feature/kan-5-all-document-types
             "document_type": document_type,
+=======
+>>>>>>> main
         },
     )
 
@@ -58,6 +65,7 @@ class TestChatMessageSuccess:
 
     @patch("routers.chat.acompletion", new_callable=AsyncMock)
     def test_is_complete_true_when_all_fields_confirmed(self, mock_llm):
+<<<<<<< feature/kan-5-all-document-types
         all_fields = {
             "purpose": "Partnership evaluation",
             "effectiveDate": "2026-01-01",
@@ -75,12 +83,18 @@ class TestChatMessageSuccess:
             "party2Title": "CTO",
             "party2Company": "Beta Corp",
         }
+=======
+>>>>>>> main
         mock_llm.return_value = _mock_completion_response(
             "Your NDA is ready to download!",
             field_updates={"party2NoticeAddress": "legal@acme.com"},
             is_complete=True,
         )
+<<<<<<< feature/kan-5-all-document-types
         res = _post_chat(current_fields=all_fields)
+=======
+        res = _post_chat()
+>>>>>>> main
         assert res.status_code == 200
         assert res.json()["is_complete"] is True
 
@@ -148,6 +162,7 @@ class TestChatMessageErrors:
             mock_llm.return_value = _mock_completion_response("Hello! What's the purpose?")
             res = _post_chat(messages=[])
             assert res.status_code == 200
+<<<<<<< feature/kan-5-all-document-types
 
 
 class TestMultiDocumentType:
@@ -185,3 +200,5 @@ class TestMultiDocumentType:
         assert res.status_code == 200
         data = res.json()
         assert "message" in data
+=======
+>>>>>>> main
