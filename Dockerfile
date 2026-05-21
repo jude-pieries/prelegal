@@ -20,6 +20,9 @@ RUN uv sync --frozen --no-install-project
 COPY backend/ .
 RUN uv sync --frozen
 
+# Copy legal document templates (needed at runtime by the templates router)
+COPY templates/ /app/templates/
+
 # Copy static frontend build into backend serving directory
 COPY --from=frontend-builder /app/frontend/out ./static
 
