@@ -29,6 +29,14 @@
   }
 }
 
+/* Hide Common Paper structural spans — they are section anchors, not visible text */
+span.header_1,
+span.header_2,
+span.header_3,
+span.header_4 {
+  display: none;
+}
+
 /* Print styles — only the document preview is visible when printing */
 @media print {
   .no-print {
