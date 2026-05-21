@@ -2,6 +2,7 @@
 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 interface MndaPreviewProps {
   markdown: string
@@ -24,7 +25,12 @@ export function MndaPreview({ markdown }: MndaPreviewProps) {
           prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline
           prose-hr:my-8"
       >
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+        >
+          {markdown}
+        </ReactMarkdown>
       </div>
     </div>
   )

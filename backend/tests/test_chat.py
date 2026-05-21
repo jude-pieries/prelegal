@@ -23,12 +23,20 @@ def _mock_completion_response(message: str, field_updates: dict = None, is_compl
     return mock_response
 
 
+<<<<<<< feature/kan-5-all-document-types
+def _post_chat(messages=None, current_fields=None, document_type: str = "mutual-non-disclosure-agreement"):
+=======
 def _post_chat(messages=None, current_fields=None):
+>>>>>>> main
     return client.post(
         "/api/chat/message",
         json={
             "messages": messages or [{"role": "user", "content": "Hello"}],
             "current_fields": current_fields or {},
+<<<<<<< feature/kan-5-all-document-types
+            "document_type": document_type,
+=======
+>>>>>>> main
         },
     )
 
@@ -57,12 +65,36 @@ class TestChatMessageSuccess:
 
     @patch("routers.chat.acompletion", new_callable=AsyncMock)
     def test_is_complete_true_when_all_fields_confirmed(self, mock_llm):
+<<<<<<< feature/kan-5-all-document-types
+        all_fields = {
+            "purpose": "Partnership evaluation",
+            "effectiveDate": "2026-01-01",
+            "mndaTermType": "expires",
+            "mndaTermYears": 1,
+            "confidentialityTermType": "years",
+            "confidentialityTermYears": 2,
+            "governingLaw": "Delaware",
+            "jurisdiction": "courts in Delaware",
+            "party1Name": "Alice Smith",
+            "party1Title": "CEO",
+            "party1Company": "Acme Inc",
+            "party1NoticeAddress": "alice@acme.com",
+            "party2Name": "Bob Jones",
+            "party2Title": "CTO",
+            "party2Company": "Beta Corp",
+        }
+=======
+>>>>>>> main
         mock_llm.return_value = _mock_completion_response(
             "Your NDA is ready to download!",
             field_updates={"party2NoticeAddress": "legal@acme.com"},
             is_complete=True,
         )
+<<<<<<< feature/kan-5-all-document-types
+        res = _post_chat(current_fields=all_fields)
+=======
         res = _post_chat()
+>>>>>>> main
         assert res.status_code == 200
         assert res.json()["is_complete"] is True
 
@@ -130,3 +162,43 @@ class TestChatMessageErrors:
             mock_llm.return_value = _mock_completion_response("Hello! What's the purpose?")
             res = _post_chat(messages=[])
             assert res.status_code == 200
+<<<<<<< feature/kan-5-all-document-types
+
+
+class TestMultiDocumentType:
+    def test_unknown_document_type_returns_404(self):
+        res = _post_chat(document_type="shareholder-agreement")
+        assert res.status_code == 404
+        assert "not supported" in res.json()["detail"]
+
+    @patch("routers.chat.acompletion", new_callable=AsyncMock)
+    def test_cloud_service_agreement_returns_200(self, mock_llm):
+        mock_llm.return_value = _mock_completion_response(
+            "Let's start your Cloud Service Agreement. What is the full legal name of the customer?",
+            field_updates={},
+            is_complete=False,
+        )
+        res = _post_chat(
+            messages=[{"role": "user", "content": "Hello"}],
+            document_type="cloud-service-agreement",
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert "message" in data
+
+    @patch("routers.chat.acompletion", new_callable=AsyncMock)
+    def test_design_partner_agreement_returns_200(self, mock_llm):
+        mock_llm.return_value = _mock_completion_response(
+            "Let's start your Design Partner Agreement. What is the full legal name of the provider?",
+            field_updates={},
+            is_complete=False,
+        )
+        res = _post_chat(
+            messages=[{"role": "user", "content": "Hello"}],
+            document_type="design-partner-agreement",
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert "message" in data
+=======
+>>>>>>> main

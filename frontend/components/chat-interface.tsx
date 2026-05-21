@@ -4,7 +4,10 @@ import { useRef, useEffect, useState } from 'react'
 import { Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
+<<<<<<< feature/kan-5-all-document-types
+=======
 import type { MndaFormData } from '@/lib/types'
+>>>>>>> main
 
 interface Message {
   role: 'assistant' | 'user'
@@ -12,6 +15,32 @@ interface Message {
 }
 
 interface ChatInterfaceProps {
+<<<<<<< feature/kan-5-all-document-types
+  documentType: string
+  documentName: string
+  onFieldUpdates: (updates: Record<string, string | number | boolean>) => void
+}
+
+const MNDA_GREETING =
+  "Hi! I'm here to help you draft your Mutual NDA. Let's start — what's the purpose of this agreement? For example, are you evaluating a potential business partnership, exploring an acquisition, or something else?"
+
+function getGreeting(documentType: string, documentName: string): string {
+  if (documentType === 'mutual-non-disclosure-agreement') {
+    return MNDA_GREETING
+  }
+  return `Hi! I'm here to help you draft your ${documentName}. Let's get started — what are the names of the two parties involved?`
+}
+
+export function ChatInterface({ documentType, documentName, onFieldUpdates }: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: getGreeting(documentType, documentName) },
+  ])
+  const [confirmedFields, setConfirmedFields] = useState<Record<string, string | number | boolean>>({})
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+=======
   onFieldUpdates: (updates: Partial<MndaFormData>) => void
 }
 
@@ -26,6 +55,7 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+>>>>>>> main
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -47,6 +77,10 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
         body: JSON.stringify({
           messages: updatedMessages,
           current_fields: confirmedFields,
+<<<<<<< feature/kan-5-all-document-types
+          document_type: documentType,
+=======
+>>>>>>> main
         }),
       })
 
@@ -58,7 +92,11 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
 
       const updates = Object.fromEntries(
         Object.entries(data.field_updates).filter(([, v]) => v !== null && v !== undefined)
+<<<<<<< feature/kan-5-all-document-types
+      ) as Record<string, string | number | boolean>
+=======
       ) as Partial<MndaFormData>
+>>>>>>> main
 
       if (Object.keys(updates).length > 0) {
         setConfirmedFields((prev) => ({ ...prev, ...updates }))
@@ -71,6 +109,10 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
       ])
     } finally {
       setLoading(false)
+<<<<<<< feature/kan-5-all-document-types
+      inputRef.current?.focus()
+=======
+>>>>>>> main
     }
   }
 
@@ -88,7 +130,11 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
           AI Assistant
         </p>
         <p className="text-sm font-medium mt-0.5" style={{ color: '#032147' }}>
+<<<<<<< feature/kan-5-all-document-types
+          {documentName}
+=======
           Mutual NDA Creator
+>>>>>>> main
         </p>
       </div>
 
@@ -124,6 +170,10 @@ export function ChatInterface({ onFieldUpdates }: ChatInterfaceProps) {
 
       <div className="shrink-0 flex items-end gap-2 pt-4 border-t mt-4">
         <Textarea
+<<<<<<< feature/kan-5-all-document-types
+          ref={inputRef}
+=======
+>>>>>>> main
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
