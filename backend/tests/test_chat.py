@@ -58,12 +58,29 @@ class TestChatMessageSuccess:
 
     @patch("routers.chat.acompletion", new_callable=AsyncMock)
     def test_is_complete_true_when_all_fields_confirmed(self, mock_llm):
+        all_fields = {
+            "purpose": "Partnership evaluation",
+            "effectiveDate": "2026-01-01",
+            "mndaTermType": "expires",
+            "mndaTermYears": 1,
+            "confidentialityTermType": "years",
+            "confidentialityTermYears": 2,
+            "governingLaw": "Delaware",
+            "jurisdiction": "courts in Delaware",
+            "party1Name": "Alice Smith",
+            "party1Title": "CEO",
+            "party1Company": "Acme Inc",
+            "party1NoticeAddress": "alice@acme.com",
+            "party2Name": "Bob Jones",
+            "party2Title": "CTO",
+            "party2Company": "Beta Corp",
+        }
         mock_llm.return_value = _mock_completion_response(
             "Your NDA is ready to download!",
             field_updates={"party2NoticeAddress": "legal@acme.com"},
             is_complete=True,
         )
-        res = _post_chat()
+        res = _post_chat(current_fields=all_fields)
         assert res.status_code == 200
         assert res.json()["is_complete"] is True
 

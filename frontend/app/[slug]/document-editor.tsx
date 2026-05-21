@@ -62,19 +62,15 @@ export function DocumentEditor({ slug }: DocumentEditorProps) {
   const mndaMarkdown = isMnda ? renderDocument(mndaData) : ''
 
   const handleDownload = () => {
-    const content = isMnda ? mndaMarkdown : buildPlainText(entry.name, fields, templateContent)
-    const blob = new Blob([content], { type: 'text/plain' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${slug}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+    const original = document.title
+    document.title = slug
+    window.addEventListener('afterprint', () => { document.title = original }, { once: true })
+    window.print()
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      <header className="h-14 bg-white border-b flex items-center px-6 gap-3 shrink-0">
+    <div className="h-screen overflow-hidden bg-slate-50 flex flex-col">
+      <header className="h-14 bg-white border-b flex items-center px-6 gap-3 shrink-0 no-print">
         <Link
           href="/"
           className="text-xs font-semibold tracking-widest uppercase hover:underline"
@@ -99,10 +95,10 @@ export function DocumentEditor({ slug }: DocumentEditorProps) {
 
       <div className="flex flex-1 overflow-hidden">
         <aside
-          className="shrink-0 bg-white border-r flex flex-col overflow-hidden"
+          className="shrink-0 bg-white border-r flex flex-col overflow-hidden no-print"
           style={{ width: 420 }}
         >
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-hidden flex flex-col p-6">
             <ChatInterface
               documentType={slug}
               documentName={entry.name}
@@ -111,7 +107,7 @@ export function DocumentEditor({ slug }: DocumentEditorProps) {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-8 print-area">
           {isMnda ? (
             <MndaPreview markdown={mndaMarkdown} />
           ) : (
@@ -127,16 +123,3 @@ export function DocumentEditor({ slug }: DocumentEditorProps) {
   )
 }
 
-function buildPlainText(
-  documentName: string,
-  fields: Record<string, string | number | boolean>,
-  templateContent: string | null
-): string {
-  const entries = Object.entries(fields).filter(([, v]) => v !== null && v !== undefined && v !== '')
-  const fieldLines = entries.map(([k, v]) => `${k}: ${v}`).join('\n')
-  const header =
-    entries.length > 0
-      ? `${documentName}\n\nFields Collected:\n${fieldLines}\n\n---\n\n`
-      : `${documentName}\n\n---\n\n`
-  return header + (templateContent ?? '')
-}

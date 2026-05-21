@@ -34,6 +34,7 @@ export function ChatInterface({ documentType, documentName, onFieldUpdates }: Ch
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -80,6 +81,7 @@ export function ChatInterface({ documentType, documentName, onFieldUpdates }: Ch
       ])
     } finally {
       setLoading(false)
+      inputRef.current?.focus()
     }
   }
 
@@ -133,6 +135,7 @@ export function ChatInterface({ documentType, documentName, onFieldUpdates }: Ch
 
       <div className="shrink-0 flex items-end gap-2 pt-4 border-t mt-4">
         <Textarea
+          ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}

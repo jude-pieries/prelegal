@@ -33,20 +33,23 @@ class DocumentConfig:
         others = ", ".join(d for d in supported_docs if d != self.name)
         return f"""You are a legal assistant helping users draft a {self.name}.
 
-Your job is to have a friendly, conversational chat to collect all the required information. Ask one question at a time in a natural, professional tone. Do not ask multiple questions at once.
+Your job is to conduct a friendly interview to collect all required information, one question at a time.
 
-IMPORTANT: You MUST collect ALL {n} fields listed below before setting is_complete to true. After each user response, identify which fields are still unconfirmed and ask the next one. Never skip a field or mark is_complete as true until every single field is confirmed.
+RULES — follow these exactly:
+1. Every single response MUST end with a question asking about the next unconfirmed field.
+2. After the user answers, confirm the value in field_updates, then immediately ask the NEXT field on the remaining list.
+3. NEVER say the document is complete or set is_complete to true unless every one of the {n} fields below has a confirmed value.
+4. Do NOT summarise, congratulate, or wrap up until all {n} fields are confirmed.
+5. If a user's answer covers multiple fields at once, capture them all in field_updates and ask about the next uncovered field.
+6. If the user asks about a different document type, explain this tool covers the {self.name} and mention we also support: {others}.
 
-The fields you need to collect are:
+Fields to collect ({n} total):
 {field_list}
 
-Instructions:
-1. Ask one question at a time in a logical, conversational order.
-2. In field_updates, include any fields you have confirmed values for based on the conversation so far.
-3. Only include a field in field_updates if you are confident about its value — do not guess.
-4. Set is_complete to true ONLY when all {n} fields above have confirmed values.
-5. Be concise and friendly. Keep responses short.
-6. If the user asks about a different type of document, let them know this tool helps with the {self.name} specifically. You can mention we also support: {others}."""
+Response format:
+- message: a short, friendly sentence acknowledging the last answer (if any) followed by your next question
+- field_updates: only fields confirmed in this turn
+- is_complete: true ONLY when ALL {n} fields above are confirmed, false otherwise"""
 
     def make_field_updates_model(self):
         return create_model(
@@ -223,11 +226,16 @@ DOCUMENT_CONFIGS: dict[str, DocumentConfig] = {
 
 MNDA_SYSTEM_PROMPT = """You are a legal assistant helping users draft a Mutual Non-Disclosure Agreement (Mutual NDA).
 
-Your job is to have a friendly, conversational chat to collect all the required information. Ask one question at a time in a natural, professional tone. Do not ask multiple questions at once.
+Your job is to conduct a friendly interview to collect all required information, one question at a time.
 
-IMPORTANT: You MUST collect ALL 16 fields listed below before setting is_complete to true. After each user response, identify which fields are still unconfirmed and ask the next one. Never skip a field or mark is_complete as true until every single field is confirmed.
+RULES — follow these exactly:
+1. Every single response MUST end with a question asking about the next unconfirmed field.
+2. After the user answers, confirm the value in field_updates, then immediately ask the NEXT field on the remaining list.
+3. NEVER say the document is complete or set is_complete to true unless every one of the 16 fields below has a confirmed value.
+4. Do NOT summarise, congratulate, or wrap up until all 16 fields are confirmed.
+5. If a user's answer covers multiple fields at once, capture them all in field_updates and ask about the next uncovered field.
 
-The fields you need to collect are:
+Fields to collect (16 total):
 - purpose: What is the NDA for? How will confidential information be used?
 - effectiveDate: When does the agreement take effect? (format: YYYY-MM-DD, e.g. "2026-05-20")
 - mndaTermType: Does the NDA have a fixed term ("expires") or continue until terminated ("continues")?
@@ -245,12 +253,10 @@ The fields you need to collect are:
 - party2Company: Legal company name of Party 2
 - party2NoticeAddress: Email or postal address for legal notices to Party 2
 
-Instructions:
-1. Ask one question at a time in a logical, conversational order.
-2. In field_updates, include any fields you have confirmed values for based on the conversation so far.
-3. Only include a field in field_updates if you are confident — do not guess.
-4. Set is_complete to true ONLY when all 16 fields above have confirmed values.
-5. Be concise and friendly. Keep responses short."""
+Response format:
+- message: a short friendly sentence acknowledging the last answer (if any) followed by your next question
+- field_updates: only fields confirmed in this turn
+- is_complete: true ONLY when ALL 16 fields above are confirmed, false otherwise"""
 
 
 class MndaFieldUpdates(BaseModel):
@@ -328,6 +334,23 @@ async def chat_message(req: ChatRequest):
                 api_key=os.getenv("OPENROUTER_API_KEY"),
             )
             result = MndaLLMResponse.model_validate_json(response.choices[0].message.content)
+            # Safety: prevent premature completion if fields are still missing
+            if result.is_complete:
+                all_fields = [
+                    "purpose", "effectiveDate", "mndaTermType", "mndaTermYears",
+                    "confidentialityTermType", "confidentialityTermYears", "governingLaw",
+                    "jurisdiction", "party1Name", "party1Title", "party1Company",
+                    "party1NoticeAddress", "party2Name", "party2Title", "party2Company",
+                    "party2NoticeAddress",
+                ]
+                now_known = {**known, **{k: v for k, v in result.field_updates.model_dump().items() if v is not None}}
+                still_missing = [f for f in all_fields if f not in now_known]
+                if still_missing:
+                    result = MndaLLMResponse(
+                        message=result.message,
+                        field_updates=result.field_updates,
+                        is_complete=False,
+                    )
             return result.model_dump(exclude_none=True)
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"AI service error: {exc}")
@@ -368,6 +391,16 @@ async def chat_message(req: ChatRequest):
             api_key=os.getenv("OPENROUTER_API_KEY"),
         )
         result = llm_response_model.model_validate_json(response.choices[0].message.content)
+        # Safety: prevent premature completion if fields are still missing
+        if result.is_complete:
+            now_known = {**known, **{k: v for k, v in result.field_updates.model_dump().items() if v is not None}}
+            still_missing = [f for f in field_names if f not in now_known]
+            if still_missing:
+                result = llm_response_model(
+                    message=result.message,
+                    field_updates=result.field_updates,
+                    is_complete=False,
+                )
         return result.model_dump(exclude_none=True)
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"AI service error: {exc}")
